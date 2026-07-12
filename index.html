@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מרכז ניהול מחקרים ומשימות</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">R</div>
+        <div>
+          <h1>מרכז המחקר</h1>
+          <p>ניהול פרויקטים ומשימות</p>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <button class="nav-button active" data-tab="dashboardView">דשבורד</button>
+        <button class="nav-button" data-tab="projectsView">פרויקטים</button>
+        <button class="nav-button" data-tab="researchersView">עובדים</button>
+        <button class="nav-button" data-tab="calendarView">לוח זמנים</button>
+        <button class="nav-button" data-tab="teamView">ניהול צוות</button>
+      </nav>
+
+      <div class="sidebar-note">
+        <strong>טיפ</strong>
+        <span>אפשר לסמן משימה כבוצעה ישירות מכל תצוגה.</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="pageTitle">דשבורד</h2>
+          <p id="pageSubtitle">תמונת מצב עדכנית של הצוות והפרויקטים</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="quickTaskBtn" class="primary">+ משימה חדשה</button>
+          <button id="refreshBtn" class="secondary">רענון</button>
+        </div>
+      </header>
+
+      <section id="setupNotice" class="notice">
+        יש לחבר את המערכת ל־Supabase לפי ההוראות בקובץ README.
+      </section>
+
+      <section id="dashboardView" class="tab-view active">
+        <section class="summary-grid">
+          <article class="summary-card blue">
+            <span>כל המשימות</span>
+            <strong id="totalTasks">0</strong>
+            <small>בכל הפרויקטים</small>
+          </article>
+          <article class="summary-card red">
+            <span>באיחור</span>
+            <strong id="overdueTasks">0</strong>
+            <small>דורשות טיפול</small>
+          </article>
+          <article class="summary-card orange">
+            <span>בתהליך</span>
+            <strong id="progressTasks">0</strong>
+            <small>כרגע בעבודה</small>
+          </article>
+          <article class="summary-card green">
+            <span>הושלמו</span>
+            <strong id="doneTasks">0</strong>
+            <small>סה״כ</small>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>דד־ליינים קרובים</h3>
+                <p>משימות לשבעת הימים הקרובים</p>
+              </div>
+              <button class="link-button" data-go-tab="calendarView">לכל המשימות</button>
+            </div>
+            <div id="upcomingDeadlines" class="stack-list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>עומס לפי עובד/ת</h3>
+                <p>מספר משימות פתוחות</p>
+              </div>
+            </div>
+            <div id="workloadList" class="workload-list"></div>
+          </article>
+
+          <article class="panel wide">
+            <div class="panel-header">
+              <div>
+                <h3>מצב הפרויקטים</h3>
+                <p>התקדמות לפי שיעור המשימות שהושלמו</p>
+              </div>
+            </div>
+            <div id="projectProgressList" class="project-progress-list"></div>
+          </article>
+        </section>
+      </section>
+
+      <section id="projectsView" class="tab-view">
+        <section class="toolbar-card">
+          <div class="toolbar-row">
+            <input id="projectSearch" placeholder="חיפוש לפי פרויקט, משימה, תגית או אחראי/ת" />
+            <select id="projectStatusFilter">
+              <option value="">כל הסטטוסים</option>
+              <option value="not_started">טרם בוצע</option>
+              <option value="in_progress">בתהליך</option>
+              <option value="done">בוצע</option>
+            </select>
+            <select id="projectPriorityFilter">
+              <option value="">כל רמות העדיפות</option>
+              <option value="low">נמוכה</option>
+              <option value="normal">רגילה</option>
+              <option value="high">גבוהה</option>
+              <option value="urgent">דחופה</option>
+            </select>
+            <label class="toggle-label">
+              <input id="hideCompleted" type="checkbox" />
+              הסתרת משימות שבוצעו
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>פרויקטים</h3>
+              <p>הוספה, עריכה ומעקב אחר משימות לפי פרויקט</p>
+            </div>
+            <form id="projectForm" class="inline-form compact">
+              <input id="projectName" placeholder="שם פרויקט חדש" required />
+              <button type="submit" class="primary">הוספה</button>
+            </form>
+          </div>
+          <p id="projectMessage" class="message"></p>
+        </section>
+
+        <section id="projectsContainer" class="projects"></section>
+      </section>
+
+      <section id="researchersView" class="tab-view">
+        <section class="toolbar-card">
+          <div class="toolbar-row">
+            <input id="researcherSearch" placeholder="חיפוש משימה, פרויקט או הערה" />
+            <select id="researcherStatusFilter">
+              <option value="">כל הסטטוסים</option>
+              <option value="not_started">טרם בוצע</option>
+              <option value="in_progress">בתהליך</option>
+              <option value="done">בוצע</option>
+            </select>
+            <select id="researcherPriorityFilter">
+              <option value="">כל רמות העדיפות</option>
+              <option value="low">נמוכה</option>
+              <option value="normal">רגילה</option>
+              <option value="high">גבוהה</option>
+              <option value="urgent">דחופה</option>
+            </select>
+          </div>
+        </section>
+        <section id="researchersContainer"></section>
+      </section>
+
+      <section id="calendarView" class="tab-view">
+        <section class="toolbar-card">
+          <div class="toolbar-row">
+            <select id="calendarFilter">
+              <option value="all">כל המשימות</option>
+              <option value="overdue">משימות באיחור</option>
+              <option value="week">השבוע הקרוב</option>
+              <option value="no_deadline">ללא דד־ליין</option>
+              <option value="done">משימות שהושלמו</option>
+            </select>
+            <select id="calendarSort">
+              <option value="deadline">מיון לפי דד־ליין</option>
+              <option value="priority">מיון לפי עדיפות</option>
+              <option value="owner">מיון לפי אחראי/ת</option>
+              <option value="project">מיון לפי פרויקט</option>
+            </select>
+          </div>
+        </section>
+        <section id="calendarTasks" class="calendar-list"></section>
+      </section>
+
+      <section id="teamView" class="tab-view">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>ניהול צוות</h3>
+              <p>הוספת עובדים חדשים לרשימת האחראים</p>
+            </div>
+            <form id="researcherForm" class="inline-form compact">
+              <input id="researcherName" placeholder="שם מלא" required />
+              <button type="submit" class="primary">הוספת עובד/ת</button>
+            </form>
+          </div>
+        </section>
+        <section class="panel">
+          <div id="teamList" class="team-grid"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="taskDialog" class="task-dialog">
+    <form id="quickTaskForm" method="dialog">
+      <div class="dialog-header">
+        <div>
+          <h3>הוספת משימה חדשה</h3>
+          <p>אפשר להוסיף משימה מכל מקום במערכת</p>
+        </div>
+        <button type="button" id="closeDialogBtn" class="icon-button">×</button>
+      </div>
+
+      <div class="dialog-grid">
+        <label>
+          פרויקט
+          <select id="dialogProject" required></select>
+        </label>
+        <label>
+          משימה
+          <input id="dialogTitle" required />
+        </label>
+        <label>
+          אחראי/ת
+          <select id="dialogOwner" required></select>
+        </label>
+        <label>
+          דד־ליין
+          <input id="dialogDeadline" type="date" />
+        </label>
+        <label>
+          סטטוס
+          <select id="dialogStatus">
+            <option value="not_started">טרם בוצע</option>
+            <option value="in_progress">בתהליך</option>
+            <option value="done">בוצע</option>
+          </select>
+        </label>
+        <label>
+          עדיפות
+          <select id="dialogPriority">
+            <option value="low">נמוכה</option>
+            <option value="normal" selected>רגילה</option>
+            <option value="high">גבוהה</option>
+            <option value="urgent">דחופה</option>
+          </select>
+        </label>
+        <label>
+          תגית
+          <input id="dialogTag" placeholder="למשל: הלסינקי, גיוס, כתיבה" />
+        </label>
+        <label class="wide">
+          הערות
+          <textarea id="dialogNotes" rows="4"></textarea>
+        </label>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" id="cancelDialogBtn" class="secondary">ביטול</button>
+        <button type="submit" class="primary">שמירת משימה</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="projectTemplate">
+    <article class="project-card">
+      <div class="project-header">
+        <div>
+          <div class="project-title-row">
+            <h3 class="project-title"></h3>
+            <span class="project-count"></span>
+          </div>
+          <div class="mini-progress">
+            <div class="mini-progress-fill"></div>
+          </div>
+        </div>
+        <div class="project-actions">
+          <button class="add-task-to-project primary">+ משימה</button>
+          <button class="delete-project danger ghost">מחיקת פרויקט</button>
+        </div>
+      </div>
+
+      <div class="task-cards"></div>
+    </article>
+  </template>
+
+  <template id="taskCardTemplate">
+    <article class="task-card">
+      <div class="task-card-top">
+        <div>
+          <div class="task-badges">
+            <span class="status-badge"></span>
+            <span class="priority-badge"></span>
+            <span class="tag-badge"></span>
+          </div>
+          <h4 class="task-title-text"></h4>
+        </div>
+        <button class="complete-toggle">סימון כבוצע</button>
+      </div>
+
+      <div class="task-meta">
+        <span class="owner-text"></span>
+        <span class="deadline-text"></span>
+        <span class="created-text"></span>
+      </div>
+
+      <p class="task-notes-text"></p>
+
+      <details class="task-editor">
+        <summary>עריכת המשימה</summary>
+        <div class="edit-grid">
+          <label>
+            משימה
+            <input class="edit-title" />
+          </label>
+          <label>
+            אחראי/ת
+            <select class="edit-owner"></select>
+          </label>
+          <label>
+            דד־ליין
+            <input class="edit-deadline" type="date" />
+          </label>
+          <label>
+            סטטוס
+            <select class="edit-status">
+              <option value="not_started">טרם בוצע</option>
+              <option value="in_progress">בתהליך</option>
+              <option value="done">בוצע</option>
+            </select>
+          </label>
+          <label>
+            עדיפות
+            <select class="edit-priority">
+              <option value="low">נמוכה</option>
+              <option value="normal">רגילה</option>
+              <option value="high">גבוהה</option>
+              <option value="urgent">דחופה</option>
+            </select>
+          </label>
+          <label>
+            תגית
+            <input class="edit-tag" />
+          </label>
+          <label class="wide">
+            הערות
+            <textarea class="edit-notes" rows="3"></textarea>
+          </label>
+        </div>
+        <div class="edit-actions">
+          <button class="save-task primary">שמירה</button>
+          <button class="delete-task danger">מחיקה</button>
+        </div>
+      </details>
+    </article>
+  </template>
+
+  <template id="researcherCardTemplate">
+    <article class="researcher-card panel">
+      <div class="researcher-header">
+        <div>
+          <h3 class="researcher-title"></h3>
+          <p class="researcher-count"></p>
+        </div>
+        <span class="researcher-load"></span>
+      </div>
+      <div class="researcher-tasks"></div>
+    </article>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
